@@ -45,17 +45,16 @@ flowchart LR
 
 ---
 
-## Documentation Suite (AI Agent Blueprint)
+## Documentation Suite
 
-This repository is structured for **Specification-Driven AI Development**. Start with [`AGENTS.md`](AGENTS.md) and consult the specification documents in [`docs/`](docs/):
+This repository is structured for **Specification-Driven AI Development**. 
 
-1. **[`AGENTS.md`](AGENTS.md)** — Master instructions, non-negotiable conventions (1-based vs 0-based bit indexing, unit suffixes, deterministic RNG seeding, strict separation of ground truth vs. tracker), and agent workflow.
-2. **[`docs/01_ARCHITECTURE_AND_DESIGN.md`](docs/01_ARCHITECTURE_AND_DESIGN.md)** — Package directory tree, core domain models, coordinate reference systems (WGS84 $\leftrightarrow$ ECEF $\leftrightarrow$ Local ENU), geodesy equations, and pipeline interfaces.
-3. **[`docs/02_PROTOCOL_SPECIFICATION.md`](docs/02_PROTOCOL_SPECIFICATION.md)** — Complete bit-level reference for Mode S (DF 0, 4, 5, 11, 16, 17, 18, 20, 21, 24), 1090ES Type Codes (TC 1–31), Comm-B BDS registers, CPR math (`NL(lat)` exact formula, encoding & decoding), Gillham Gray code, 24-bit CRC polynomial, 978 MHz UAT, and wire codecs (AVR, Beast, SBS-1).
-4. **[`docs/03_FLIGHT_SYNTHESIS_AND_PHYSICS.md`](docs/03_FLIGHT_SYNTHESIS_AND_PHYSICS.md)** — Aircraft performance database, ISA atmosphere and wind models, LNAV great-circle & turn anticipation geometry, VNAV flight phase state machine, and DO-260B/C transmit interval timers.
-5. **[`docs/04_ERROR_AND_ANOMALY_SIMULATION.md`](docs/04_ERROR_AND_ANOMALY_SIMULATION.md)** — Mathematical models for RF propagation, line-of-sight horizon & terrain obstruction, Poisson FRUIT interference, overlapping frame GARBLE bit corruption, transponder bugs, and adversarial spoofing profiles.
-6. **[`docs/05_TRACKING_AND_STATE_ESTIMATION.md`](docs/05_TRACKING_AND_STATE_ESTIMATION.md)** — Stateful CPR position reconstruction, track association & lifecycle state machine, IMM Kalman Filter equations, BDS inference, and anomaly/spoofing detection heuristics.
-7. **[`docs/06_IMPLEMENTATION_ROADMAP_AND_TESTING.md`](docs/06_IMPLEMENTATION_ROADMAP_AND_TESTING.md)** — Phased implementation plan (Phases 0–7), golden test vectors, `hypothesis` property-based test invariants, and closed-loop benchmark scenarios.
+1. **[`docs/01_ARCHITECTURE_AND_DESIGN.md`](docs/01_ARCHITECTURE_AND_DESIGN.md)** — Package directory tree, core domain models, coordinate reference systems (WGS84 $\leftrightarrow$ ECEF $\leftrightarrow$ Local ENU), geodesy equations, and pipeline interfaces.
+2. **[`docs/02_PROTOCOL_SPECIFICATION.md`](docs/02_PROTOCOL_SPECIFICATION.md)** — Complete bit-level reference for Mode S (DF 0, 4, 5, 11, 16, 17, 18, 20, 21, 24), 1090ES Type Codes (TC 1–31), Comm-B BDS registers, CPR math (`NL(lat)` exact formula, encoding & decoding), Gillham Gray code, 24-bit CRC polynomial, 978 MHz UAT, and wire codecs (AVR, Beast, SBS-1).
+3. **[`docs/03_FLIGHT_SYNTHESIS_AND_PHYSICS.md`](docs/03_FLIGHT_SYNTHESIS_AND_PHYSICS.md)** — Aircraft performance database, ISA atmosphere and wind models, LNAV great-circle & turn anticipation geometry, VNAV flight phase state machine, and DO-260B/C transmit interval timers.
+4. **[`docs/04_ERROR_AND_ANOMALY_SIMULATION.md`](docs/04_ERROR_AND_ANOMALY_SIMULATION.md)** — Mathematical models for RF propagation, line-of-sight horizon & terrain obstruction, Poisson FRUIT interference, overlapping frame GARBLE bit corruption, transponder bugs, and adversarial spoofing profiles.
+5. **[`docs/05_TRACKING_AND_STATE_ESTIMATION.md`](docs/05_TRACKING_AND_STATE_ESTIMATION.md)** — Stateful CPR position reconstruction, track association & lifecycle state machine, IMM Kalman Filter equations, BDS inference, and anomaly/spoofing detection heuristics.
+6. **[`docs/06_IMPLEMENTATION_ROADMAP_AND_TESTING.md`](docs/06_IMPLEMENTATION_ROADMAP_AND_TESTING.md)** — Phased implementation plan (Phases 0–7), golden test vectors, `hypothesis` property-based test invariants, and closed-loop benchmark scenarios.
 
 ---
 
