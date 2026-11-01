@@ -14,6 +14,7 @@ It is designed around a **closed-loop architecture**:
 **Launch** with: **" python -m uvicorn adsb.api.app:app --host 0.0.0.0 --port 8000 --reload "** and add aircraft for tracks using **"python scripts\generate_flights.py --number 100"** for a once off boost in aircraft or **"python scripts\constant_flight_generator.py"** to continuously create departures form all airports in he simulation based on how busy the airport would normally be.  
 
 **Test** the library with the scripts contained in the test.zip
+
 ---
 
 ## Closed-Loop System Architecture
