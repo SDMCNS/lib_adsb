@@ -1,0 +1,61 @@
+"""Global physical, geodetic, and aviation constants for the adsb package."""
+
+from __future__ import annotations
+
+from adsb.core.coordinates import (
+    EARTH_MEAN_RADIUS_M,
+    EFFECTIVE_EARTH_RADIUS_FACTOR,
+    FREQ_1090ES_HZ,
+    FREQ_UAT_HZ,
+    GAMMA_AIR,
+    GAS_CONSTANT_AIR,
+    GRAVITY_MPS2,
+    ISA_LAPSE_RATE_KPM,
+    ISA_P0_PA,
+    ISA_RHO0_KGPM3,
+    ISA_T0_K,
+    SPEED_OF_LIGHT_MPS,
+    WGS84_A_M,
+    WGS84_B_M,
+    WGS84_E2,
+    WGS84_E_PRIME2,
+    WGS84_F,
+)
+from adsb.core.units import (
+    FEET_TO_METERS,
+    FPM_TO_MPS,
+    KNOTS_TO_MPS,
+    METERS_TO_FEET,
+    METERS_TO_NM,
+    MPS_TO_FPM,
+    MPS_TO_KNOTS,
+    NM_TO_METERS,
+)
+
+__all__ = [
+    "EARTH_MEAN_RADIUS_M",
+    "EFFECTIVE_EARTH_RADIUS_FACTOR",
+    "FEET_TO_METERS",
+    "FPM_TO_MPS",
+    "FREQ_1090ES_HZ",
+    "FREQ_UAT_HZ",
+    "GAMMA_AIR",
+    "GAS_CONSTANT_AIR",
+    "GRAVITY_MPS2",
+    "ISA_LAPSE_RATE_KPM",
+    "ISA_P0_PA",
+    "ISA_RHO0_KGPM3",
+    "ISA_T0_K",
+    "KNOTS_TO_MPS",
+    "METERS_TO_FEET",
+    "METERS_TO_NM",
+    "MPS_TO_FPM",
+    "MPS_TO_KNOTS",
+    "NM_TO_METERS",
+    "SPEED_OF_LIGHT_MPS",
+    "WGS84_A_M",
+    "WGS84_B_M",
+    "WGS84_E2",
+    "WGS84_E_PRIME2",
+    "WGS84_F",
+]
