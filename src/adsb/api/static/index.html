@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADS-B / Mode S Tactical Air Traffic Radar & Tracker</title>
+  <link rel="stylesheet" href="/css/radar.css">
+  <!-- Optional Leaflet CSS (with offline tolerance) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+</head>
+<body class="atc-theme">
+  <div id="app" class="atc-layout">
+    <!-- Top Control Bar -->
+    <header class="top-bar">
+      <div class="brand-group">
+        <span class="radar-symbol">⌖</span>
+        <span class="brand-title">ATC RADAR SCOPE</span>
+        <span class="system-tag">DO-260B // 1090ES</span>
+      </div>
+
+      <div class="sim-controls">
+        <button id="btn-play" class="control-btn play-btn" title="Start simulation">▶ START</button>
+        <button id="btn-pause" class="control-btn pause-btn" title="Pause simulation">❚❚ PAUSE</button>
+        <button id="btn-step" class="control-btn step-btn" title="Step 1 second">►❚ STEP</button>
+        <button id="btn-reset" class="control-btn reset-btn" title="Reset simulation">↺ RESET</button>
+        <button id="btn-new-flight" class="control-btn flight-btn" title="Create custom flight between airports">✈ NEW FLIGHT</button>
+        <button id="btn-add-receiver" class="control-btn rx-btn" title="Place ground ADS-B receiver station">🗼 ADD RECEIVER</button>
+        <button id="btn-add-jammer" class="control-btn jammer-btn" title="Place RF interference source / jammer">☢ ADD JAMMER</button>
+        <button id="btn-toggle-sensors" class="control-btn sensor-btn" title="Toggle Sensor Network HUD">📡 SENSORS (<span id="sensor-count">10</span>)</button>
+
+        <div class="speed-pill-group">
+          <span class="group-label">SPEED:</span>
+          <button class="speed-btn active" data-speed="1.0">1x</button>
+          <button class="speed-btn" data-speed="2.0">2x</button>
+          <button class="speed-btn" data-speed="5.0">5x</button>
+          <button class="speed-btn" data-speed="10.0">10x</button>
+        </div>
+
+        <div class="scenario-selector">
+          <label for="scenario-select" class="group-label">SCENARIO:</label>
+          <select id="scenario-select" class="atc-select">
+            <option value="clean_tma_10_aircraft">Clean TMA (10 Acft)</option>
+            <option value="congested_tma_25_aircraft">Congested TMA (25 Acft)</option>
+            <option value="fault_and_spoofing_test">Faults & Spoofing</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="telemetry-badges">
+        <div class="stat-badge">
+          <span class="stat-label">SIM TIME</span>
+          <span id="sim-time" class="stat-val">0.0 s</span>
+        </div>
+        <div class="stat-badge">
+          <span class="stat-label">TRACKS</span>
+          <span id="track-count" class="stat-val highlight">0</span>
+        </div>
+        <div class="view-toggle-group">
+          <button id="btn-toggle-radar" class="view-btn active">RADAR</button>
+          <button id="btn-toggle-map" class="view-btn">MAP</button>
+        </div>
+        <div id="conn-status" class="conn-pill offline" title="WebSocket status">OFFLINE</div>
+      </div>
+    </header>
+
+    <!-- Main Display Viewport -->
+    <main class="main-viewport">
+      <div id="radar-container" class="viewport-panel active">
+        <canvas id="radar-canvas"></canvas>
+      </div>
+      <div id="map-container" class="viewport-panel">
+        <div id="leaflet-map"></div>
+      </div>
+
+      <!-- Slide-Out Aircraft Inspection Drawer -->
+      <aside id="telemetry-drawer" class="telemetry-drawer closed">
+        <div class="drawer-header">
+          <div class="aircraft-id-block">
+            <h2 id="drawer-callsign" class="drawer-callsign">------</h2>
+            <span id="drawer-icao" class="drawer-icao">000000</span>
+          </div>
+          <div class="drawer-status-badges">
+            <span id="drawer-state" class="state-pill tentative">TENTATIVE</span>
+            <button id="drawer-close-btn" class="drawer-close" aria-label="Close panel">✕</button>
+          </div>
+        </div>
+
+        <div class="drawer-body">
+          <div class="metric-row">
+            <span class="metric-label">SQUAWK</span>
+            <span id="metric-squawk" class="metric-val mono">----</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">BARO ALTITUDE</span>
+            <span id="metric-alt-baro" class="metric-val">--- ft</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">GEOM ALTITUDE</span>
+            <span id="metric-alt-geom" class="metric-val">--- ft</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">GROUNDSPEED</span>
+            <span id="metric-gs" class="metric-val">--- kt</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">TRACK / HEADING</span>
+            <span id="metric-track" class="metric-val">---°</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">VERTICAL RATE</span>
+            <span id="metric-vr" class="metric-val">--- fpm</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">LAT / LON</span>
+            <span id="metric-latlon" class="metric-val mono">--.----, --.----</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">TURN PROBABILITY</span>
+            <span id="metric-turn-prob" class="metric-val">0 %</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">LAST UPDATE</span>
+            <span id="metric-last-seen" class="metric-val">-- s</span>
+          </div>
+
+          <div class="anomalies-section">
+            <h3 class="section-title">ACTIVE ANOMALIES</h3>
+            <div id="drawer-anomalies" class="anomaly-badges-list">
+              <span class="no-anomalies">None detected</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Bottom Wire Stream & Frame Injection Console -->
+    <footer class="bottom-console">
+      <div class="console-header">
+        <button id="btn-toggle-console" class="console-toggle-btn">
+          <span class="toggle-icon">▼</span> WIRE STREAM & LIVE INJECTION
+        </button>
+        <div class="console-format-status">
+          STREAM FORMAT: <span id="wire-format-tag" class="format-tag">AVR</span>
+        </div>
+      </div>
+
+      <div id="console-body" class="console-body collapsed">
+        <div class="wire-log-panel">
+          <div id="wire-log" class="wire-log"></div>
+        </div>
+
+        <div class="injection-panel">
+          <form id="inject-form" class="inject-form">
+            <div class="inject-inputs">
+              <select id="inject-format" class="atc-select format-select">
+                <option value="AVR">AVR (*hex;)</option>
+                <option value="BEAST">BEAST (Binary / Hex)</option>
+                <option value="SBS">SBS-1 (CSV)</option>
+              </select>
+              <input
+                id="inject-raw-data"
+                type="text"
+                class="inject-input"
+                placeholder="*8D4840D6202CC371C32CE0576098;"
+                required
+              />
+              <button type="submit" id="btn-inject" class="control-btn inject-btn">INJECT</button>
+            </div>
+            <div id="inject-feedback" class="inject-feedback"></div>
+          </form>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Custom Flight Creation Modal Dialog -->
+  <div id="flight-modal" class="modal-backdrop hidden">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="radar-symbol">✈</span>
+          <span class="modal-title">NEW FLIGHT DISPATCH</span>
+          <span class="system-tag">TERMINAL PROCEDURES</span>
+        </div>
+        <button id="btn-close-flight-modal" class="modal-close-btn" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <form id="create-flight-form" class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="select-origin">ORIGIN AIRPORT (ICAO)</label>
+            <select id="select-origin" class="atc-select" required>
+              <option value="" disabled selected>Select Origin...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="select-destination">DESTINATION AIRPORT (ICAO)</label>
+            <select id="select-destination" class="atc-select" required>
+              <option value="" disabled selected>Select Destination...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="select-aircraft-type">AIRCRAFT TYPE</label>
+            <select id="select-aircraft-type" class="atc-select" required>
+              <option value="" disabled selected>Select Aircraft...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="input-callsign">CALLSIGN (OPTIONAL)</label>
+            <input type="text" id="input-callsign" class="atc-input mono" placeholder="e.g. KLM1023" maxlength="8">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="input-cruise-alt">CRUISE ALTITUDE (FT)</label>
+            <input type="number" id="input-cruise-alt" class="atc-input mono" placeholder="36000" min="1000" max="60000" step="1000">
+          </div>
+          <div class="form-group">
+            <label for="input-squawk">SQUAWK CODE</label>
+            <input type="text" id="input-squawk" class="atc-input mono" placeholder="1200" maxlength="4" value="1200">
+          </div>
+        </div>
+
+        <div id="flight-modal-feedback" class="modal-feedback hidden"></div>
+
+        <div class="modal-footer">
+          <button type="button" id="btn-cancel-flight" class="control-btn cancel-btn">CANCEL</button>
+          <button type="submit" id="btn-launch-flight" class="control-btn launch-btn">🚀 LAUNCH FLIGHT</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Ground Receiver Placement Modal Dialog -->
+  <div id="receiver-modal" class="modal-backdrop hidden">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="radar-symbol">🗼</span>
+          <span class="modal-title">GROUND RECEIVER STATION DISPATCH</span>
+          <span class="system-tag">MODE S / 1090ES</span>
+        </div>
+        <button id="btn-close-receiver-modal" class="modal-close-btn" aria-label="Close dialog">&times;</button>
+      </div>
+      <form id="create-receiver-form" class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="rx-input-id">STATION ID (OPTIONAL)</label>
+            <input type="text" id="rx-input-id" class="atc-input mono" placeholder="e.g. RX_EHAM_NORTH">
+          </div>
+          <div class="form-group">
+            <label for="rx-input-name">STATION NAME</label>
+            <input type="text" id="rx-input-name" class="atc-input" placeholder="e.g. Schiphol North Radar" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="rx-input-lat">LATITUDE (DEG)</label>
+            <input type="number" id="rx-input-lat" class="atc-input mono" step="0.0001" min="-90" max="90" placeholder="52.3105" required>
+          </div>
+          <div class="form-group">
+            <label for="rx-input-lon">LONGITUDE (DEG)</label>
+            <input type="number" id="rx-input-lon" class="atc-input mono" step="0.0001" min="-180" max="180" placeholder="4.7683" required>
+          </div>
+          <div class="form-group" style="flex: 0 0 110px;">
+            <label>&nbsp;</label>
+            <button type="button" id="btn-rx-pick-map" class="control-btn pick-map-btn" title="Click on map to select coordinates">📍 PICK MAP</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="rx-input-alt">ANTENNA ELEVATION (M MSL)</label>
+            <input type="number" id="rx-input-alt" class="atc-input mono" step="1" value="15" min="-500" max="10000">
+          </div>
+          <div class="form-group">
+            <label for="rx-input-gain">PEAK GAIN (DBI)</label>
+            <input type="number" id="rx-input-gain" class="atc-input mono" step="0.5" value="5.0" min="-10" max="30">
+          </div>
+          <div class="form-group">
+            <label for="rx-input-sens">SENSITIVITY (DBM)</label>
+            <input type="number" id="rx-input-sens" class="atc-input mono" step="1" value="-84" min="-120" max="-40">
+          </div>
+        </div>
+        <div id="rx-modal-feedback" class="modal-feedback hidden"></div>
+        <div class="modal-footer">
+          <button type="button" id="btn-cancel-rx" class="control-btn cancel-btn">CANCEL</button>
+          <button type="submit" id="btn-deploy-rx" class="control-btn launch-btn">🗼 PLACE RECEIVER</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- RF Jammer Deployment Modal Dialog -->
+  <div id="jammer-modal" class="modal-backdrop hidden">
+    <div class="modal-window hazard-theme">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="hazard-symbol">☢</span>
+          <span class="modal-title">RF INTERFERENCE / JAMMER DEPLOYMENT</span>
+          <span class="system-tag hazard">EW / 1090 MHz</span>
+        </div>
+        <button id="btn-close-jammer-modal" class="modal-close-btn" aria-label="Close dialog">&times;</button>
+      </div>
+      <form id="create-jammer-form" class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="jam-input-id">SOURCE ID (OPTIONAL)</label>
+            <input type="text" id="jam-input-id" class="atc-input mono" placeholder="e.g. JAMMER_01">
+          </div>
+          <div class="form-group">
+            <label for="jam-input-name">JAMMER NAME</label>
+            <input type="text" id="jam-input-name" class="atc-input" placeholder="e.g. Tactical Jammer Alpha" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="jam-input-lat">LATITUDE (DEG)</label>
+            <input type="number" id="jam-input-lat" class="atc-input mono" step="0.0001" min="-90" max="90" placeholder="52.2500" required>
+          </div>
+          <div class="form-group">
+            <label for="jam-input-lon">LONGITUDE (DEG)</label>
+            <input type="number" id="jam-input-lon" class="atc-input mono" step="0.0001" min="-180" max="180" placeholder="4.6500" required>
+          </div>
+          <div class="form-group" style="flex: 0 0 110px;">
+            <label>&nbsp;</label>
+            <button type="button" id="btn-jam-pick-map" class="control-btn pick-map-btn" title="Click on map to select coordinates">📍 PICK MAP</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="jam-input-power">TRANSMIT POWER (EIRP): <span id="power-val-label" class="mono">40 dBm (10.0 W)</span></label>
+            <input type="range" id="jam-input-power" class="atc-slider" min="10" max="60" step="1" value="40">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="jam-input-freq">FREQUENCY (MHZ)</label>
+            <input type="number" id="jam-input-freq" class="atc-input mono" step="0.1" value="1090.0">
+          </div>
+          <div class="form-group">
+            <label for="jam-input-bw">BANDWIDTH (MHZ)</label>
+            <input type="number" id="jam-input-bw" class="atc-input mono" step="0.5" value="2.0">
+          </div>
+          <div class="form-group toggle-group">
+            <label for="jam-input-active">TRANSMITTING</label>
+            <input type="checkbox" id="jam-input-active" checked class="atc-checkbox">
+          </div>
+        </div>
+        <div id="jam-modal-feedback" class="modal-feedback hidden"></div>
+        <div class="modal-footer">
+          <button type="button" id="btn-cancel-jam" class="control-btn cancel-btn">CANCEL</button>
+          <button type="submit" id="btn-deploy-jam" class="control-btn hazard-launch-btn">☢ DEPLOY JAMMER</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sensor Network & Spectrum HUD Drawer -->
+  <aside id="sensor-hud" class="sensor-hud closed">
+    <div class="hud-header">
+      <div class="hud-title-group">
+        <span class="radar-symbol">📡</span>
+        <h2 class="hud-title">SENSOR NETWORK & RF ENVIRONMENT</h2>
+      </div>
+      <button id="sensor-hud-close" class="drawer-close" aria-label="Close panel">✕</button>
+    </div>
+    <div class="hud-summary-bar">
+      <div class="hud-kpi">
+        <span class="kpi-label">RECEIVERS</span>
+        <span id="kpi-rx-count" class="kpi-val highlight">10</span>
+      </div>
+      <div class="hud-kpi">
+        <span class="kpi-label">SPECTRUM HEALTH</span>
+        <span id="kpi-health-status" class="kpi-val status-pill normal">OPTIMAL</span>
+      </div>
+      <div class="hud-kpi">
+        <span class="kpi-label">ACTIVE JAMMERS</span>
+        <span id="kpi-jammer-count" class="kpi-val hazard">0</span>
+      </div>
+    </div>
+    <div class="hud-body">
+      <section class="hud-section">
+        <h3 class="section-title">GROUND RECEIVER STATIONS</h3>
+        <div id="sensor-rx-list" class="sensor-card-list">
+          <!-- Dynamic receiver cards -->
+        </div>
+      </section>
+      <section class="hud-section">
+        <h3 class="section-title">RF INTERFERENCE & JAMMERS</h3>
+        <div id="sensor-jammer-list" class="sensor-card-list">
+          <!-- Dynamic jammer cards -->
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <!-- Leaflet JS (with optional fallback) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Main Application ES Module -->
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
