@@ -10,7 +10,6 @@ The library uses a modern `src/` layout under `src/adsb/` with strict subpackage
 
 ```text
 c:\Projects\libraries\adsb\
-├── AGENTS.md                           # AI Coding Agent Master Instructions
 ├── README.md                           # Overview & Quickstart
 ├── pyproject.toml                      # PEP 621 config, mypy --strict, ruff, pytest
 ├── docs/                               # Specification-Driven Development Blueprints
