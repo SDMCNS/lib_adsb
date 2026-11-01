@@ -5,14 +5,15 @@
 
 <img width="1000" height="470" alt="Screenshot 2026-11-01 110958" src="https://github.com/user-attachments/assets/f58bf8b1-9b6e-4056-bd06-a9c0511f5947" />
 
-**Launch** with: **" python -m uvicorn adsb.api.app:app --host 0.0.0.0 --port 8000 --reload "** and add aircraft for tracks using **"python scripts\generate_flights.py --number 100"** for a once off boost in aircraft or **"python scripts\constant_flight_generator.py"** to continuously create departures form all airports in he simulation based on how busy the airport would normally be.  
-
 It is designed around a **closed-loop architecture**:
 1. **Synthesize** multi-aircraft 4D flight trajectories (from gate pushback to touchdown rollout) using realistic aircraft performance profiles, LNAV/VNAV waypoint routing, and atmospheric wind models, and encode them into authentic schedule-driven ADS-B / Mode S / UAT bitstreams.
 2. **Impair** the transmitted bitstreams through realistic RF channel conditions (line-of-sight horizon & terrain masking, free-space path loss, overlapping FRUIT/garble collisions, bit error bursts) and avionics failure modes (CPR odd/even cache desync, Gillham altitude encoder stuck bits, stale GPS caches, spoofing/ghost injection).
 3. **Decode** raw frames from multiple industry wire formats (Raw AVR `*8D...;`, Mode S Beast Binary, SBS-1 BaseStation CSV, UAT hex, JSON) with full 24-bit CRC validation (`0xFFF409`), syndrome error correction, and stateless extraction of all 1090ES Type Codes (DO-260B/C), Mode S replies (DF4/5/11/20/21 + Comm-B BDS registers), and 978 MHz UAT messages.
 4. **Track** aircraft over time in a stateful multi-target tracker featuring Global/Local Compact Position Reporting (CPR) state machines, Interacting Multiple Model (IMM) Kalman Filtering (Constant Velocity + Coordinated Turn in local ENU coordinates), track lifecycle management, and kinematic/protocol anomaly detection.
 
+**Launch** with: **" python -m uvicorn adsb.api.app:app --host 0.0.0.0 --port 8000 --reload "** and add aircraft for tracks using **"python scripts\generate_flights.py --number 100"** for a once off boost in aircraft or **"python scripts\constant_flight_generator.py"** to continuously create departures form all airports in he simulation based on how busy the airport would normally be.  
+
+**Test** the library with the scripts contained in the test.zip
 ---
 
 ## Closed-Loop System Architecture
