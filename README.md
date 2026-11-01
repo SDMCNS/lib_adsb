@@ -2,6 +2,8 @@
 
 `lib_adsb` is a comprehensive, strictly typed Python 3.11+ library for **end-to-end simulation, physical-layer/avionics error injection, protocol decoding, and multi-target state estimation** of Automatic Dependent Surveillance–Broadcast (ADS-B), Mode S (1090 MHz), and Universal Access Transceiver (978 MHz UAT) traffic.
 
+**Launch** with: **" python -m uvicorn adsb.api.app:app --host 0.0.0.0 --port 8000 --reload "** and add aircraft for tracks using **"python scripts\generate_flights.py --number 100"** for a once off boost in aircraft or **"python scripts\constant_flight_generator.py"** to continuously create departures form all airports in he simulation based on how busy the airport would normally be.  
+
 It is designed around a **closed-loop architecture**:
 1. **Synthesize** multi-aircraft 4D flight trajectories (from gate pushback to touchdown rollout) using realistic aircraft performance profiles, LNAV/VNAV waypoint routing, and atmospheric wind models, and encode them into authentic schedule-driven ADS-B / Mode S / UAT bitstreams.
 2. **Impair** the transmitted bitstreams through realistic RF channel conditions (line-of-sight horizon & terrain masking, free-space path loss, overlapping FRUIT/garble collisions, bit error bursts) and avionics failure modes (CPR odd/even cache desync, Gillham altitude encoder stuck bits, stale GPS caches, spoofing/ghost injection).
