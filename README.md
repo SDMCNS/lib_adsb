@@ -1,6 +1,6 @@
-# `adsb` — High-Fidelity ADS-B / Mode S / UAT Synthesis, Impairment, Decoding & Tracking Library
+# `lib_adsb` — High-Fidelity ADS-B / Mode S / UAT Synthesis, Impairment, Decoding & Tracking Library
 
-`adsb` is a comprehensive, strictly typed Python 3.11+ library for **end-to-end simulation, physical-layer/avionics error injection, protocol decoding, and multi-target state estimation** of Automatic Dependent Surveillance–Broadcast (ADS-B), Mode S (1090 MHz), and Universal Access Transceiver (978 MHz UAT) traffic.
+`lib_adsb` is a comprehensive, strictly typed Python 3.11+ library for **end-to-end simulation, physical-layer/avionics error injection, protocol decoding, and multi-target state estimation** of Automatic Dependent Surveillance–Broadcast (ADS-B), Mode S (1090 MHz), and Universal Access Transceiver (978 MHz UAT) traffic.
 
 It is designed around a **closed-loop architecture**:
 1. **Synthesize** multi-aircraft 4D flight trajectories (from gate pushback to touchdown rollout) using realistic aircraft performance profiles, LNAV/VNAV waypoint routing, and atmospheric wind models, and encode them into authentic schedule-driven ADS-B / Mode S / UAT bitstreams.
